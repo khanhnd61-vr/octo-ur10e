@@ -19,20 +19,23 @@ if [ -z "${WANDB_API_KEY:-}" ]; then
   exit 1
 fi
 
-SAVE_DIR="/mnt/data/ur10e-robotiq/octo-small-finetune/checkpoints"
-mkdir -p "$SAVE_DIR"
-LOG="/mnt/data/ur10e-robotiq/octo-small-finetune/finetune_ur10e.log"
+# Overridable so the same runner drives both the no-proprio and proprio variants.
+CONFIG="${CONFIG:-scripts/configs/finetune_ur10e.py}"
+NAME="${NAME:-ur10e_pick_cup}"
+SAVE_DIR="${SAVE_DIR:-/mnt/data/ur10e-robotiq/octo-small-finetune/checkpoints}"
+LOG="${LOG:-/mnt/data/ur10e-robotiq/octo-small-finetune/finetune_ur10e.log}"
+mkdir -p "$SAVE_DIR" "$(dirname "$LOG")"
 
 # 1 epoch = 20596 transitions / batch 16 = ~1287 steps.
-# 30000 steps = ~23 epochs, matching Octo's own finetune default.
+# 60000 steps = ~46 epochs (the baseline run converged by ~40k).
 # The cosine LR anneals to zero exactly at NUM_STEPS, so this also sets the schedule.
 NUM_STEPS="${NUM_STEPS:-30000}"
 
-echo "=== launch $(date)  num_steps=$NUM_STEPS ===" | tee -a "$LOG"
+echo "=== launch $(date)  config=$CONFIG  name=$NAME  num_steps=$NUM_STEPS ===" | tee -a "$LOG"
 
 torchrun --nproc_per_node 1 scripts/finetune_pt.py \
-  --name ur10e_pick_cup \
-  --config scripts/configs/finetune_ur10e.py:full,language_conditioned \
+  --name "$NAME" \
+  --config "${CONFIG}:full,language_conditioned" \
   --config.pretrained_path=hf://rail-berkeley/octo-small-1.5 \
   --config.batch_size=16 \
   --config.num_steps="$NUM_STEPS" \
