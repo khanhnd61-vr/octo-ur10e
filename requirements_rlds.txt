@@ -1,0 +1,9 @@
+# Deps for convert_ur_to_rlds.py (RLDS/TFDS conversion of UR10e HDF5 episodes).
+# These overlap with the main requirements.txt; listed here so the converter
+# can be run in a minimal env if desired.
+numpy==1.24.3
+scipy==1.12.0
+h5py>=3.8
+opencv-python>=4.7
+tensorflow==2.15.0
+tensorflow_datasets==4.9.2

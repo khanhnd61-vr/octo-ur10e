@@ -301,6 +301,10 @@ def main(_):
             wandb.log(
                 {"train_loss": loss.item(), "learning_rate": lr_sheduler.get_last_lr()[0]}, step=i
             )
+            logging.info(
+                "step %d/%d  train_loss %.5f  lr %.2e",
+                i + 1, int(FLAGS.config.num_steps), loss.item(), lr_sheduler.get_last_lr()[0],
+            )
         
 
         if distributed_state.is_main_process and (i + 1) % FLAGS.config.save_interval == 0 and save_dir is not None:
