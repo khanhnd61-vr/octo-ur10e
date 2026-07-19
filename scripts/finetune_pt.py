@@ -190,6 +190,19 @@ def main(_):
     )
     
     dataset_iter = dataset.repeat().unbatch().shuffle(FLAGS.config.shuffle_buffer_size)
+
+    # Cap tf.data AUTOTUNE's memory budget. By default AUTOTUNE decides how many
+    # trajectories to decode concurrently based on perceived headroom, which on a
+    # 16 GB box with long (stride-1, ~611 frame) episodes ballooned to ~12 GB and got
+    # the trainer OOM-killed (SIGKILL). Options set on the final dataset apply to the
+    # whole input pipeline. 0 disables the cap.
+    _ram_gb = float(FLAGS.config.get("tf_autotune_ram_budget_gb", 3.0))
+    if _ram_gb > 0:
+        _options = tf.data.Options()
+        _options.autotune.ram_budget = int(_ram_gb * 1024**3)
+        dataset_iter = dataset_iter.with_options(_options)
+        logging.info("tf.data autotune ram_budget capped at %.1f GB", _ram_gb)
+
     pytorch_dataset = TorchRLDSDataset(dataset_iter, meta["text_processor"])
     
     dataloader = DataLoader(
