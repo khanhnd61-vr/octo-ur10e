@@ -1,0 +1,21 @@
+# Compatibility pins discovered while setting up octo-pytorch finetuning on
+# CPython 3.10.12 + CUDA (RTX 3060). Install AFTER `pip install -r requirements.txt`
+# and torch/accelerate, to override versions that break the pipeline:
+#
+#   pip install -r requirements_compat_pins.txt
+#
+# Why each pin:
+#   * tensorflow-metadata: newer releases require protobuf>=5.26, which is
+#     incompatible with tensorflow==2.15 (protobuf 3.20/4.x). 1.14.0 matches TF 2.15.
+#   * wandb: releases >=0.17 ship protobuf-5 generated stubs -> ImportError on
+#     protobuf 3.20.3. 0.16.6 works with protobuf 3.x/4.x.
+#   * transformers: 5.x removed Flax; octo's text_processor imports FlaxAutoModel.
+#     4.34.1 still provides it.
+#
+# Also required: build the venv on Python >= 3.10.12 (NOT 3.10.0). Python 3.10.0 has
+# an asyncio bug where `asyncio.Condition(lock=asyncio.Lock())` (used by
+# jax array_serialization during orbax checkpoint restore) raises
+# "ValueError: loop argument must agree with lock".
+tensorflow-metadata==1.14.0
+wandb==0.16.6
+transformers==4.34.1
